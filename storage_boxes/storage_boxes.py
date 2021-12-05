@@ -164,23 +164,21 @@ if label:
         )
     )
 
-if separator:
+if separator and box_size != (1, 1):
     res = (
-        res.union(
-            cq.Workplane().pushPoints(pts[1:box_size[0]]).createSep()
-        )
+        res.union(cq.Workplane().pushPoints(pts[1:box_size[0]]).createSep())
         .faces(
             cq.selectors.BoxSelector(
-                (box_length - 10, box_width - 10, base_height + 2),
+                (box_length / 2, 2, base_height + 2),
                 (
-                    box_length * box_size[0] - 10,
-                    box_width * box_size[1] - 10,
+                    (box_length * box_size[0]) - (box_length / 2),
+                    box_width * box_size[1] - 2,
                     box_height - 1,
                 ),
             )
         )
         .edges(">Y or <Y")
-        .fillet(1)
+        .fillet(0.5)
     )
 
 show_object(res)
