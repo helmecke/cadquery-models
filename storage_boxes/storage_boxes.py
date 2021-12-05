@@ -16,22 +16,37 @@ box_length = 54.8
 box_width = 54.8
 box_height = 75.0
 base_height = 4
+# Must be higher than 0
+taper = 0.5
 label_length = 12
 label_width = 35
 # Must be 0.01 mm smaller than extrusion width in PrusaSlicer to avoid gab fill
 extrusion_width = 0.44
-tab_length = label_length + 3 * extrusion_width
-tab_width = label_width + 3 * extrusion_width
+tab_length = label_length + 4 * extrusion_width
+tab_width = label_width + 4 * extrusion_width
 tab_height = tab_length
 
 if half_height:
-    box_height = box_height / 2 - 1
+    box_height = box_height / 2 + base_height - 0.5
 
 
 def createBottom(self):
-    s1 = cq.Sketch().rect(box_width - 9, box_length - 9).vertices().fillet(3)
+    s1 = (
+        cq.Sketch()
+        .rect(
+            box_width - 2 * taper - 2 * base_height,
+            box_length - 2 * taper - 2 * base_height,
+        )
+        .vertices()
+        .fillet(3)
+    )
 
-    s2 = cq.Sketch().rect(box_width - 1, box_length - 1).vertices().fillet(3)
+    s2 = (
+        cq.Sketch()
+        .rect(box_width - 2 * taper, box_length - 2 * taper)
+        .vertices()
+        .fillet(3)
+    )
 
     R = (
         cq.Workplane()
@@ -52,13 +67,14 @@ cq.Workplane.createBottom = createBottom
 
 def createSep(self):
     s1 = cq.Sketch().rect(
-        (box_width - 1 - 3 * extrusion_width) * box_size[1] + (-1 + 1 * box_size[1]),
-        2 * extrusion_width,
+        (box_width - taper - 3 * extrusion_width) * box_size[1]
+        + (-taper + 1 * box_size[1]),
+        3 * extrusion_width,
     )
 
     s2 = cq.Sketch().rect(
         (box_width - 3 * extrusion_width) * box_size[1],
-        2 * extrusion_width,
+        3 * extrusion_width,
     )
 
     R = (
@@ -101,8 +117,8 @@ res = (
     .placeSketch(
         cq.Sketch()
         .rect(
-            (box_width - 1) * box_size[1] + (-1 + 1 * box_size[1]),
-            (box_length - 1) * box_size[0] + (-1 + 1 * box_size[0]),
+            box_width * box_size[1] - 2 * taper,
+            box_length * box_size[0] - 2 * taper,
         )
         .vertices()
         .fillet(3)
@@ -138,7 +154,7 @@ res = (
     .faces(">Z")
     .shell(-3 * extrusion_width)
     .faces("<Z[2]")
-    .fillet(1.2)
+    .fillet(taper * 2.4)
 )
 
 if label:
@@ -150,15 +166,15 @@ if label:
         .faces(">Z")
         .wires()
         .toPending()
-        .offset2D(-3 * extrusion_width)
+        .offset2D(-2 * extrusion_width)
         .cutBlind(-1)
         .edges("|Z and >X")
-        .fillet(3 * extrusion_width)
+        .fillet(2 * extrusion_width)
         .translate(
             (
-                extrusion_width,
+                1.1 * extrusion_width,
                 box_length * box_size[1] / 2,
-                box_height - tab_height - base_height + 1,
+                box_height - tab_height - base_height,
             )
         )
     )
