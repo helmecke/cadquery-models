@@ -55,12 +55,12 @@ cq.Workplane.createBottom = createBottom
 def createSep(self):
     s1 = cq.Sketch().rect(
         (box_width - 1 - 3 * extrusion_width) * box_size[1] + (-1 + 1 * box_size[1]),
-        3 * extrusion_width,
+        2 * extrusion_width,
     )
 
     s2 = cq.Sketch().rect(
         (box_width - 3 * extrusion_width) * box_size[1],
-        3 * extrusion_width,
+        2 * extrusion_width,
     )
 
     R = (
