@@ -20,7 +20,8 @@ box_height = 75.0
 base_height = 4
 label_length = 12
 label_width = 35
-extrusion_width = 0.45
+# Must be 0.01 mm smaller than extrusion width in PrusaSlicer to avoid gab fill
+extrusion_width = 0.44
 tab_length = label_length + 3 * extrusion_width
 tab_width = label_width + 3 * extrusion_width
 tab_height = tab_length
