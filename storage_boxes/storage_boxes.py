@@ -7,8 +7,6 @@ if "show_object" not in globals():
         pass
 
 
-debug = {"alpha": 0.5}
-
 box_size = (3, 2)
 half_height = True
 label = True
