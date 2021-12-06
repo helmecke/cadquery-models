@@ -18,6 +18,7 @@ box_height = 75.0
 base_height = 4
 # Must be higher than 0
 taper = 0.5
+recess = 0.25
 label_length = 12
 label_width = 35
 # Must be 0.01 mm smaller than extrusion width in PrusaSlicer to avoid gab fill
@@ -34,8 +35,8 @@ def createBottom(self):
     s1 = (
         cq.Sketch()
         .rect(
-            box_width - 2 * taper - 2 * base_height,
-            box_length - 2 * taper - 2 * base_height,
+            box_width - 2 * taper - 2 * recess - 2 * base_height,
+            box_length - 2 * taper - 2 * recess - 2 * base_height,
         )
         .vertices()
         .fillet(3)
@@ -43,7 +44,7 @@ def createBottom(self):
 
     s2 = (
         cq.Sketch()
-        .rect(box_width - 2 * taper, box_length - 2 * taper)
+        .rect(box_width - 2 * taper - 2 * recess, box_length - 2 * taper - 2 * recess)
         .vertices()
         .fillet(3)
     )
@@ -67,13 +68,13 @@ cq.Workplane.createBottom = createBottom
 
 def createSep(self):
     s1 = cq.Sketch().rect(
-        (box_width - taper - 3 * extrusion_width) * box_size[1]
+        (box_width - 3 * extrusion_width) * box_size[1] - 2 * taper - 2 * recess
         + (-taper + 1 * box_size[1]),
         3 * extrusion_width,
     )
 
     s2 = cq.Sketch().rect(
-        (box_width - 3 * extrusion_width) * box_size[1],
+        (box_width - 3 * extrusion_width) * box_size[1] - 2 * recess,
         3 * extrusion_width,
     )
 
@@ -117,8 +118,8 @@ res = (
     .placeSketch(
         cq.Sketch()
         .rect(
-            box_width * box_size[1] - 2 * taper,
-            box_length * box_size[0] - 2 * taper,
+            box_width * box_size[1] - 2 * taper - 2 * recess,
+            box_length * box_size[0] - 2 * taper - 2 * recess,
         )
         .vertices()
         .fillet(3)
@@ -133,8 +134,8 @@ res = (
         ),
         cq.Sketch()
         .rect(
-            box_width * box_size[1],
-            box_length * box_size[0],
+            box_width * box_size[1] - 2 * recess,
+            box_length * box_size[0] - 2 * recess,
         )
         .vertices()
         .fillet(3)
@@ -173,7 +174,7 @@ if label:
         .fillet(2 * extrusion_width)
         .translate(
             (
-                1.1 * extrusion_width,
+                1.1 * extrusion_width + recess,
                 box_length * box_size[1] / 2,
                 box_height - tab_height - base_height,
             )
@@ -182,7 +183,7 @@ if label:
 
 if separator and box_size != (1, 1):
     res = (
-        res.union(cq.Workplane().pushPoints(pts[1:box_size[0]]).createSep())
+        res.union(cq.Workplane().pushPoints(pts[1 : box_size[0]]).createSep())
         .faces(
             cq.selectors.BoxSelector(
                 (box_length / 2, 2, base_height + 2),
@@ -195,6 +196,18 @@ if separator and box_size != (1, 1):
         )
         .edges(">Y or <Y")
         .fillet(0.5)
+    )
+
+if recess > 0:
+    res = (
+        res.wires(">Z")
+        .first()
+        .toPending()
+        .offset2D(recess)
+        .add(res.wires(">Z").last().toPending())
+        .extrude(-10)
+        .faces("<Z[4]").wires().first()
+        .chamfer(recess - 1e-04)
     )
 
 show_object(res)
