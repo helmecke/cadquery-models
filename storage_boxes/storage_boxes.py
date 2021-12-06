@@ -153,9 +153,10 @@ res = (
     .createBottom()
     .faces(">Z")
     .shell(-3 * extrusion_width)
-    .faces("<Z[2]")
-    .fillet(taper * 2.4)
 )
+
+if taper >= 0.01:
+    res = res.faces("<Z[2]").fillet(taper * 2.4)
 
 if label:
     res = res.union(
