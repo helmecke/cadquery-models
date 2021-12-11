@@ -17,7 +17,7 @@ box_width = 54.8
 box_height = 75.0
 base_height = 4
 # Must be higher than 0
-taper = 0.5
+taper = 0.1
 recess = 0.25
 label_length = 12
 label_width = 35
@@ -28,7 +28,7 @@ tab_width = label_width + 4 * extrusion_width
 tab_height = tab_length
 
 if half_height:
-    box_height = box_height / 2 + base_height - 0.5
+    box_height = box_height / 2 + base_height / 2 - 0.55
 
 
 def createBottom(self):
@@ -68,7 +68,9 @@ cq.Workplane.createBottom = createBottom
 
 def createSep(self):
     s1 = cq.Sketch().rect(
-        (box_width - 3 * extrusion_width) * box_size[1] - 2 * taper - 2 * recess
+        (box_width - 3 * extrusion_width) * box_size[1]
+        - 2 * taper
+        - 2 * recess
         + (-taper + 1 * box_size[1]),
         3 * extrusion_width,
     )
@@ -157,7 +159,7 @@ res = (
 )
 
 if taper >= 0.01:
-    res = res.faces("<Z[2]").fillet(taper * 2.4)
+    res = res.faces("<Z[2]").fillet((taper + recess) * 2.4)
 
 if label:
     res = res.union(
@@ -176,7 +178,7 @@ if label:
             (
                 1.1 * extrusion_width + recess,
                 box_length * box_size[1] / 2,
-                box_height - tab_height - base_height,
+                box_height - tab_height - base_height + 0.5,
             )
         )
     )
@@ -186,10 +188,10 @@ if separator and box_size != (1, 1):
         res.union(cq.Workplane().pushPoints(pts[1 : box_size[0]]).createSep())
         .faces(
             cq.selectors.BoxSelector(
-                (box_length / 2, 2, base_height + 2),
+                (box_length / 2, 2 + recess, base_height + 2),
                 (
-                    (box_length * box_size[0]) - (box_length / 2),
-                    box_width * box_size[1] - 2,
+                    (box_length * box_size[0]) - (box_length / 2) - 2 * recess,
+                    box_width * box_size[1] - 2 - recess,
                     box_height - 1,
                 ),
             )
@@ -199,15 +201,31 @@ if separator and box_size != (1, 1):
     )
 
 if recess > 0:
-    res = (
+    s = (
         res.wires(">Z")
-        .first()
+        .wires(cq.NearestToPointSelector((0, 0, 0)))
         .toPending()
         .offset2D(recess)
-        .add(res.wires(">Z").last().toPending())
-        .extrude(-10)
-        .faces("<Z[4]").wires().first()
-        .chamfer(recess - 1e-04)
+        .add(
+            res.faces(">Z")
+            .wires(
+            ).last()
+            .toPending()
+        )
+        .extrude(-10, combine=False)
     )
+
+    if half_height:
+        res = res.union(
+            s.faces("<Z")
+            .wires(cq.NearestToPointSelector((0, 0, 0)))
+            .chamfer(recess + extrusion_width)
+        )
+    else:
+        res = res.union(
+            s.faces("<Z")
+            .wires(cq.NearestToPointSelector((0, 0, 0)))
+            .chamfer(recess + extrusion_width)
+        )
 
 show_object(res)
